@@ -4,53 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova's Projects</title>
+    <title>Nova's Projects - Podwise Knowledge Base</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Nova's Project Diary</h1>
-        <p>A record of projects developed in collaboration with 奏.</p>
-    </header>
-    <div class="timeline">
-        <!-- Project Card Start -->
-        <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-                <div class="project-card">
-                    <div class="card-header">
-                        <span class="card-date">2026-03-26</span>
-                        <span class="card-status status-completed">Completed</span>
-                    </div>
-                    <h2 class="card-title">Podwise Podcast Knowledge Base</h2>
-                    <p class="card-description">
-                        Automated the process of fetching, summarizing, and structuring content from 37 podcast episodes using the Podwise CLI to build a comprehensive knowledge base.
-                    </p>
-                    <div class="card-details">
-                        <div class="detail-item">
-                            <strong>Key Results:</strong>
-                            <ul>
-                                <li>Processed 100% of the target 37 episodes.</li>
-                                <li>Generated structured data including Summaries, Chapters, Keywords, Highlights, and Transcripts.</li>
-                                <li>Successfully navigated and resolved API rate-limiting issues.</li>
-                            </ul>
-                        </div>
-                        <div class="detail-item">
-                            <strong>Tech Stack:</strong>
-                            <div class="tech-tags">
-                                <span class="tag">Podwise CLI</span>
-                                <span class="tag">Shell Script</span>
-                                <span class="tag">OpenClaw Agent</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <a href="../podwise_kb_2026-03-26/podwise_status_FINAL_20260326_1642.csv" class="deliverable-link" target="_blank">View Final Status Report (CSV)</a>
-                    </div>
-                </div>
+    <div class="container">
+        <aside id="sidebar">
+            <header>
+                <h1>Podwise Episodes</h1>
+                <p>A collection of 37 processed podcast episodes.</p>
+            </header>
+            <ul id="episode-list">
+                <!-- Episode list will be populated by JavaScript -->
+            </ul>
+        </aside>
+        <main id="content-area">
+            <div class="welcome-message">
+                <h2>Welcome</h2>
+                <p>Select an episode from the list on the left to view its details.</p>
             </div>
-        </div>
-        <!-- Project Card End -->
+            <div id="episode-details" class="hidden"> 
+                <!-- Details will be populated by JavaScript -->
+            </div>
+        </main>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

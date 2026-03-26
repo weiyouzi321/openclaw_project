@@ -4,30 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova's Projects - Podwise Knowledge Base</title>
-    <link rel="stylesheet" href="style.css">
+    <title>奏的作品集</title>
+    <link rel="stylesheet" href="portfolio_style.css">
 </head>
 <body>
-    <div class="container">
-        <aside id="sidebar">
-            <header>
-                <h1>Podwise Episodes</h1>
-                <p>A collection of 37 processed podcast episodes.</p>
-            </header>
-            <ul id="episode-list">
-                <!-- Episode list will be populated by JavaScript -->
-            </ul>
-        </aside>
-        <main id="content-area">
-            <div class="welcome-message">
-                <h2>Welcome</h2>
-                <p>Select an episode from the list on the left to view its details.</p>
-            </div>
-            <div id="episode-details" class="hidden"> 
-                <!-- Details will be populated by JavaScript -->
-            </div>
-        </main>
-    </div>
-    <script src="script.js"></script>
+    <header>
+        <h1>奏的作品集</h1>
+        <p>一个由 Nova 协助构建和维护的个人项目展示页面。</p>
+    </header>
+    <main>
+        <section class="project-grid">
+            <a href="./podcast_project/podcast.html" class="project-card">
+                <h2>播客知识库</h2>
+                <p>一个基于 Podwise 内容构建的交互式播客知识库应用。</p>
+                <span>点击查看 &rarr;</span>
+            </a>
+            <!-- New project cards can be added here -->
+        </section>
+    </main>
 </body>
 </html>

@@ -59,10 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .split(/\d+\.\s/)
             .filter(Boolean)
             .map(kw => {
-                const parts = kw.split('**:');
+                const parts = kw.split('**_');
                 if(parts.length < 2) return '';
                 const term = parts[0].replace(/\*\*/g, '').trim();
-                const definition = parts.slice(1).join('**:').trim();
+                const definition = parts.slice(1).join('**_').trim();
                 return `<div class="keyword-item"><strong>${term}:</strong> ${formatText(definition)}</div>`;
             })
             .join('');

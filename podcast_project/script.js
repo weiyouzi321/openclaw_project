@@ -1,94 +1,129 @@
 
 document.addEventListener('DOMContentLoaded', () => {
-    const episodeList = document.getElementById('episode-list');
-    const contentArea = document.getElementById('content-area');
-    const welcomeMessage = contentArea.querySelector('.welcome-message');
-    const episodeDetailsContainer = document.getElementById('episode-details');
+    // DOM Elements
+    const channelCol = document.getElementById('channel-column');
+    const programCol = document.getElementById('program-column');
+    const detailsCol = document.getElementById('details-column');
+    
+    const channelList = document.getElementById('channel-list');
+    const programList = document.getElementById('program-list');
+    const keyPointsDisplay = document.getElementById('key-points-display');
+    const welcomeMessage = detailsCol.querySelector('.welcome-message');
 
-    let allEpisodes = [];
+    let allData = [];
+    let activeChannelId = null;
+    let activeProgramId = null;
 
-    // Fetch and process the episode data
-    fetch('data.json')
+    // --- Data Fetching ---
+    fetch('data_v2.json')
         .then(response => response.json())
         .then(data => {
-            allEpisodes = data;
-            populateEpisodeList(allEpisodes);
+            allData = data;
+            renderChannels();
         })
         .catch(error => {
-            console.error("Error fetching episode data:", error);
-            episodeList.innerHTML = '<li>Error loading episodes.</li>';
+            console.error("Error fetching data:", error);
+            channelList.innerHTML = '<li>Error loading channels.</li>';
         });
 
-    // Create the list of episodes in the sidebar
-    function populateEpisodeList(episodes) {
-        episodeList.innerHTML = ''; // Clear existing list
-        episodes.forEach((episode, index) => {
+    // --- Render Functions ---
+
+    function renderChannels() {
+        channelList.innerHTML = '';
+        allData.forEach(channel => {
             const li = document.createElement('li');
-            li.textContent = episode.title || `Episode ${episode.id}`;
-            li.dataset.index = index;
-            episodeList.appendChild(li);
+            li.textContent = channel.channelName;
+            li.dataset.channelId = channel.channelId;
+            channelList.appendChild(li);
         });
     }
 
-    // Handle clicks on the episode list
-    episodeList.addEventListener('click', (event) => {
-        if (event.target.tagName === 'LI') {
-            // Remove active class from previously selected item
-            const currentActive = episodeList.querySelector('.active');
-            if (currentActive) {
-                currentActive.classList.remove('active');
+    function renderPrograms(channelId) {
+        const channel = allData.find(c => c.channelId === channelId);
+        if (!channel) return;
+
+        programList.innerHTML = '';
+        channel.programs.forEach(program => {
+            const li = document.createElement('li');
+            li.textContent = program.title;
+            li.dataset.programId = program.id;
+            programList.appendChild(li);
+        });
+
+        programCol.style.display = 'flex'; // Show program column
+    }
+
+    function renderKeyPoints(programId) {
+        let program = null;
+        for (const channel of allData) {
+            const foundProgram = channel.programs.find(p => p.id === programId);
+            if (foundProgram) {
+                program = foundProgram;
+                break;
             }
-            // Add active class to the clicked item
-            event.target.classList.add('active');
-
-            const episodeIndex = event.target.dataset.index;
-            const episode = allEpisodes[episodeIndex];
-            displayEpisodeDetails(episode);
         }
-    });
 
-    // Display the details of the selected episode
-    function displayEpisodeDetails(episode) {
-        welcomeMessage.classList.add('hidden');
-        episodeDetailsContainer.classList.remove('hidden');
+        if (!program) return;
 
-        // Sanitize and format text for HTML
-        const formatText = (text) => text.replace(/\\n/g, '<br>');
+        welcomeMessage.style.display = 'none';
+        keyPointsDisplay.style.display = 'block';
         
-        const keywordsHTML = (episode.keywords_raw || '')
-            .split(/\d+\.\s/)
-            .filter(Boolean)
-            .map(kw => {
-                const parts = kw.split('**_');
-                if(parts.length < 2) return '';
-                const term = parts[0].replace(/\*\*/g, '').trim();
-                const definition = parts.slice(1).join('**_').trim();
-                return `<div class="keyword-item"><strong>${term}:</strong> ${formatText(definition)}</div>`;
-            })
-            .join('');
+        const formatText = (text) => text.replace(/\\n/g, '<br>');
 
-        episodeDetailsContainer.innerHTML = `
-            <h2>${episode.title || `Episode ${episode.id}`}</h2>
-
-            <div class="detail-section">
-                <h3>Summary</h3>
-                <p>${formatText(episode.summary)}</p>
+        keyPointsDisplay.innerHTML = `
+            <h2>${program.title}</h2>
+            <div class="key-point-section">
+                <h3>摘要 (Summary)</h3>
+                <p>${formatText(program.summary || '')}</p>
             </div>
-
-            <div class="detail-section">
-                <h3>Highlights</h3>
-                <p>${formatText(episode.highlights)}</p>
+            <div class="key-point-section">
+                <h3>高亮 (Highlights)</h3>
+                <p>${formatText(program.highlights || '')}</p>
             </div>
-            
-            <div class="detail-section">
-                <h3>Keywords</h3>
-                <div class="keywords-container">${keywordsHTML}</div>
-            </div>
-
-            <div class="detail-section">
-                <h3>Chapters</h3>
-                <p>${formatText(episode.chapters)}</p>
+            <div class="key-point-section">
+                <h3>分章节内容 (Chapters)</h3>
+                <div>${formatText(program.chapters || '')}</div>
             </div>
         `;
     }
+
+    // --- Event Listeners ---
+
+    channelList.addEventListener('click', (event) => {
+        if (event.target.tagName !== 'LI') return;
+
+        const newChannelId = event.target.dataset.channelId;
+        if (newChannelId === activeChannelId) return; // Avoid re-rendering if the same channel is clicked
+
+        activeChannelId = newChannelId;
+
+        // Update active visual state
+        const currentActive = channelList.querySelector('.active');
+        if (currentActive) currentActive.classList.remove('active');
+        event.target.classList.add('active');
+
+        // Reset subsequent columns
+        programCol.style.display = 'none';
+        programList.innerHTML = '';
+        keyPointsDisplay.style.display = 'none';
+        welcomeMessage.style.display = 'block';
+        activeProgramId = null;
+
+        renderPrograms(activeChannelId);
+    });
+
+    programList.addEventListener('click', (event) => {
+        if (event.target.tagName !== 'LI') return;
+
+        const newProgramId = event.target.dataset.programId;
+        if (newProgramId === activeProgramId) return; // Avoid re-rendering
+
+        activeProgramId = newProgramId;
+
+        const currentActive = programList.querySelector('.active');
+        if (currentActive) currentActive.classList.remove('active');
+        event.target.classList.add('active');
+        
+        renderKeyPoints(activeProgramId);
+    });
 });

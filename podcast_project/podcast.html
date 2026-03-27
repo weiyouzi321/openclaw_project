@@ -4,28 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova's Projects - Podwise Knowledge Base</title>
+    <title>播客知识库</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <aside id="sidebar">
-            <header>
-                <h1>Podwise Episodes</h1>
-                <p>A collection of 37 processed podcast episodes.</p>
-            </header>
-            <ul id="episode-list">
-                <!-- Episode list will be populated by JavaScript -->
-            </ul>
-        </aside>
-        <main id="content-area">
+        <div id="channel-column" class="column">
+            <header><h1>频道</h1></header>
+            <ul id="channel-list"></ul>
+        </div>
+        <div id="program-column" class="column">
+            <header><h1>节目</h1></header>
+            <ul id="program-list"></ul>
+        </div>
+        <main id="details-column" class="column">
+            <!-- Key points will be displayed here -->
             <div class="welcome-message">
-                <h2>Welcome</h2>
-                <p>Select an episode from the list on the left to view its details.</p>
+                <h2>欢迎使用播客知识库</h2>
+                <p>请从左侧选择一个频道，然后选择一个节目来查看其要点。</p>
             </div>
-            <div id="episode-details" class="hidden"> 
-                <!-- Details will be populated by JavaScript -->
-            </div>
+            <div id="key-points-display"></div>
         </main>
     </div>
     <script src="script.js"></script>

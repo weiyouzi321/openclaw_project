@@ -21,17 +21,17 @@ html, body {
 }
 
 #channel-column {
-    flex: 0 0 250px; /* Fixed width */
+    flex: 0 0 250px;
     background-color: #fff;
 }
 
 #program-column {
-    flex: 0 0 350px; /* Fixed width */
+    flex: 0 0 350px;
     background-color: #f1f3f5;
 }
 
 #details-column {
-    flex-grow: 1; /* Takes remaining space */
+    flex-grow: 1;
     background-color: #ffffff;
     overflow-y: auto;
 }
@@ -59,7 +59,7 @@ html, body {
     cursor: pointer;
     border-radius: 0.3rem;
     margin: 0.25rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .column li:hover {
@@ -72,41 +72,83 @@ html, body {
 }
 
 #details-column .welcome-message {
-    padding: 2rem;
+    padding: 4rem;
     text-align: center;
     color: #6c757d;
 }
 
 #key-points-display {
-    padding: 2rem;
-    line-height: 1.7;
+    padding: 3rem;
+    line-height: 1.8;
+    max-width: 900px;
 }
 
 #key-points-display h2 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 4px solid #007bff;
+    padding-bottom: 0.5rem;
 }
 
 .key-point-section {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .key-point-section h3 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     color: #343a40;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    background: #f1f3f5;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
 }
 
-/* Hide initially */
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.insight-card {
+    background: #e7f3ff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 5px solid #007bff;
+    font-weight: 500;
+    color: #0056b3;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.qa-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.qa-item {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.qa-item .question {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.qa-item .answer {
+    color: #555;
+    border-top: 1px solid #eee;
+    padding-top: 0.75rem;
+}
+
+/* Initially hidden, will be shown via JS */
 #program-column,
 #key-points-display {
     display: none;
-}
-
-#program-column.visible,
-#key-points-display.visible {
-    display: flex;
 }

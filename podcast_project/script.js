@@ -1,129 +1,122 @@
 
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const channelCol = document.getElementById('channel-column');
-    const programCol = document.getElementById('program-column');
-    const detailsCol = document.getElementById('details-column');
-    
     const channelList = document.getElementById('channel-list');
     const programList = document.getElementById('program-list');
     const keyPointsDisplay = document.getElementById('key-points-display');
-    const welcomeMessage = detailsCol.querySelector('.welcome-message');
+    const welcomeMessage = document.querySelector('.welcome-message');
 
     let allData = [];
     let activeChannelId = null;
     let activeProgramId = null;
 
-    // --- Data Fetching ---
     fetch('data_v2.json')
         .then(response => response.json())
         .then(data => {
             allData = data;
             renderChannels();
         })
-        .catch(error => {
-            console.error("Error fetching data:", error);
-            channelList.innerHTML = '<li>Error loading channels.</li>';
-        });
-
-    // --- Render Functions ---
+        .catch(error => console.error("Error fetching data:", error));
 
     function renderChannels() {
         channelList.innerHTML = '';
         allData.forEach(channel => {
             const li = document.createElement('li');
             li.textContent = channel.channelName;
-            li.dataset.channelId = channel.channelId;
+            li.onclick = () => selectChannel(channel.channelId, li);
             channelList.appendChild(li);
         });
     }
 
-    function renderPrograms(channelId) {
+    function selectChannel(channelId, element) {
+        if (activeChannelId === channelId) return;
+        activeChannelId = channelId;
+        
+        document.querySelectorAll('#channel-list li').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+
         const channel = allData.find(c => c.channelId === channelId);
-        if (!channel) return;
-
-        programList.innerHTML = '';
-        channel.programs.forEach(program => {
-            const li = document.createElement('li');
-            li.textContent = program.title;
-            li.dataset.programId = program.id;
-            programList.appendChild(li);
-        });
-
-        programCol.style.display = 'flex'; // Show program column
+        renderPrograms(channel.programs);
+        
+        document.getElementById('program-column').style.display = 'flex';
+        keyPointsDisplay.style.display = 'none';
+        welcomeMessage.style.display = 'block';
     }
 
-    function renderKeyPoints(programId) {
-        let program = null;
-        for (const channel of allData) {
-            const foundProgram = channel.programs.find(p => p.id === programId);
-            if (foundProgram) {
-                program = foundProgram;
-                break;
-            }
-        }
+    function renderPrograms(programs) {
+        programList.innerHTML = '';
+        programs.forEach(program => {
+            const li = document.createElement('li');
+            li.textContent = program.title;
+            li.onclick = () => selectProgram(program.id, li);
+            programList.appendChild(li);
+        });
+    }
 
-        if (!program) return;
+    function selectProgram(programId, element) {
+        activeProgramId = programId;
+        document.querySelectorAll('#program-list li').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
 
+        let program;
+        allData.forEach(c => {
+            const found = c.programs.find(p => p.id === programId);
+            if (found) program = found;
+        });
+
+        renderDetails(program);
+    }
+
+    function renderDetails(program) {
         welcomeMessage.style.display = 'none';
         keyPointsDisplay.style.display = 'block';
         
-        const formatText = (text) => text.replace(/\\n/g, '<br>');
+        const formatText = (text) => text.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+
+        let insightsHTML = '';
+        if (program.key_insights) {
+            insightsHTML = `
+                <div class="key-point-section">
+                    <h3>核心见解 (Key Insights)</h3>
+                    <div class="insights-grid">
+                        ${program.key_insights.map(i => `<div class="insight-card">${i}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        let qaHTML = '';
+        if (program.qa) {
+            qaHTML = `
+                <div class="key-point-section">
+                    <h3>深度问答 (Q&A)</h3>
+                    <div class="qa-list">
+                        ${program.qa.map(item => `
+                            <div class="qa-item">
+                                <div class="question">Q: ${item.q}</div>
+                                <div class="answer">A: ${item.a}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         keyPointsDisplay.innerHTML = `
             <h2>${program.title}</h2>
             <div class="key-point-section">
-                <h3>摘要 (Summary)</h3>
-                <p>${formatText(program.summary || '')}</p>
+                <h3>内容摘要</h3>
+                <p>${formatText(program.summary)}</p>
             </div>
+            ${insightsHTML}
+            ${qaHTML}
             <div class="key-point-section">
-                <h3>高亮 (Highlights)</h3>
+                <h3>精彩高亮</h3>
                 <p>${formatText(program.highlights || '')}</p>
             </div>
             <div class="key-point-section">
-                <h3>分章节内容 (Chapters)</h3>
+                <h3>分章节精要</h3>
                 <div>${formatText(program.chapters || '')}</div>
             </div>
         `;
     }
-
-    // --- Event Listeners ---
-
-    channelList.addEventListener('click', (event) => {
-        if (event.target.tagName !== 'LI') return;
-
-        const newChannelId = event.target.dataset.channelId;
-        if (newChannelId === activeChannelId) return; // Avoid re-rendering if the same channel is clicked
-
-        activeChannelId = newChannelId;
-
-        // Update active visual state
-        const currentActive = channelList.querySelector('.active');
-        if (currentActive) currentActive.classList.remove('active');
-        event.target.classList.add('active');
-
-        // Reset subsequent columns
-        programCol.style.display = 'none';
-        programList.innerHTML = '';
-        keyPointsDisplay.style.display = 'none';
-        welcomeMessage.style.display = 'block';
-        activeProgramId = null;
-
-        renderPrograms(activeChannelId);
-    });
-
-    programList.addEventListener('click', (event) => {
-        if (event.target.tagName !== 'LI') return;
-
-        const newProgramId = event.target.dataset.programId;
-        if (newProgramId === activeProgramId) return; // Avoid re-rendering
-
-        activeProgramId = newProgramId;
-
-        const currentActive = programList.querySelector('.active');
-        if (currentActive) currentActive.classList.remove('active');
-        event.target.classList.add('active');
-        
-        renderKeyPoints(activeProgramId);
-    });
 });

@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         episodeDetailsContainer.classList.remove('hidden');
 
         // Sanitize and format text for HTML
-        const formatText = (text) => text.replace(/\\n/g, '\n');
+        const formatText = (text) => text.replace(/\\n/g, '<br>');
         
         const keywordsHTML = (episode.keywords_raw || '')
             .split(/\d+\.\s/)

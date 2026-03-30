@@ -4,35 +4,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const programList = document.getElementById('program-list');
     const keyPointsDisplay = document.getElementById('key-points-display');
     const welcomeMessage = document.querySelector('.welcome-message');
+    const programColumn = document.getElementById('program-column');
 
     let allData = [];
     let activeChannelId = null;
     let activeProgramId = null;
 
-    // Load data from unified source
+    console.log("Script loaded, fetching data_v2.json...");
+
     fetch('data_v2.json')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(data => {
+            console.log("Data fetched successfully:", data);
             allData = data;
             renderChannels();
         })
-        .catch(error => console.error("Error fetching data:", error));
+        .catch(error => {
+            console.error("Error fetching data:", error);
+            welcomeMessage.innerHTML = `<h2>数据加载失败</h2><p>${error.message}</p>`;
+        });
 
     function renderChannels() {
+        if (!channelList) return;
         channelList.innerHTML = '';
         allData.forEach(channel => {
             const li = document.createElement('li');
             li.textContent = channel.channelName;
-            // Enhanced active state logic
             li.className = activeChannelId === channel.channelId ? 'active' : '';
             li.onclick = () => selectChannel(channel.channelId, li);
             channelList.appendChild(li);
         });
+        console.log("Channels rendered.");
     }
 
     function selectChannel(channelId, element) {
+        console.log("Channel selected:", channelId);
         activeChannelId = channelId;
-        activeProgramId = null; // Reset program when channel changes
+        activeProgramId = null;
         
         document.querySelectorAll('#channel-list li').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
@@ -40,28 +51,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const channel = allData.find(c => c.channelId === channelId);
         renderPrograms(channel.programs);
         
-        // UI reset for new channel
-        document.getElementById('program-column').style.display = 'flex';
+        // Ensure program column is visible
+        if (programColumn) {
+            programColumn.style.display = 'flex';
+        }
         keyPointsDisplay.style.display = 'none';
         welcomeMessage.style.display = 'block';
+        welcomeMessage.innerHTML = `<h2>已选择频道: ${channel.channelName}</h2><p>请从中间列选择一个节目来查看详细总结。</p>`;
     }
 
     function renderPrograms(programs) {
+        if (!programList) return;
         programList.innerHTML = '';
         programs.forEach(program => {
             const li = document.createElement('li');
             li.textContent = program.title;
+            li.className = activeProgramId === program.id ? 'active' : '';
             li.onclick = () => selectProgram(program.id, li);
             programList.appendChild(li);
         });
+        console.log("Programs rendered.");
     }
 
     function selectProgram(programId, element) {
+        console.log("Program selected:", programId);
         activeProgramId = programId;
         document.querySelectorAll('#program-list li').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
 
-        // Find program across all channels
         let program = null;
         for (const channel of allData) {
             program = channel.programs.find(p => p.id === programId);
@@ -80,47 +97,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return text.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
         };
 
-        // 1. Chapters Section (Supporting Array or Raw String)
-        let chaptersHTML = '';
-        if (Array.isArray(program.chapters)) {
-            chaptersHTML = `
-                <div class="chapters-timeline">
-                    ${program.chapters.map(c => `
-                        <div class="chapter-item" style="margin-bottom: 12px; display: flex; align-items: baseline;">
-                            <span class="timestamp" style="background: #eef4ff; color: #377EB8; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; font-size: 0.9em; cursor: pointer;">${c.timestamp}</span>
-                            <span class="chapter-title" style="margin-left: 15px; color: #333; font-weight: 500;">${c.title}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        } else {
-            chaptersHTML = `<p>${formatText(program.chapters)}</p>`;
-        }
-
-        // 2. Highlights Section
-        let highlightsHTML = '';
-        if (Array.isArray(program.highlights)) {
-            highlightsHTML = program.highlights.map(h => `
-                <div class="highlight-item" style="margin-bottom: 15px; border-left: 4px solid #E41A1C; padding: 5px 15px; background: #fffdfd; border-radius: 0 8px 8px 0;">
-                    <div style="font-size: 0.85em; color: #888; margin-bottom: 4px;">Time: ${h.timestamp}</div>
-                    <p style="margin: 0; color: #444; line-height: 1.5; font-style: italic;">"${h.text}"</p>
-                </div>
-            `).join('');
-        } else {
-            highlightsHTML = `<p>${formatText(program.highlights)}</p>`;
-        }
-
-        // 3. Q&A Section
+        // 1. Q&A Section
         let qaHTML = '';
-        if (Array.isArray(program.qa)) {
+        if (Array.isArray(program.qa) && program.qa.length > 0) {
             qaHTML = `
                 <div class="key-point-section">
                     <h3>深度解读 (Q&A)</h3>
                     <div class="qa-list">
                         ${program.qa.map(item => `
-                            <div class="qa-card" style="background: #f8f9fa; border: 1px solid #edf0f2; padding: 18px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                                <div class="question" style="font-weight: bold; color: #2c3e50; font-size: 1.05em; margin-bottom: 10px;">Q: ${item.question || item.q}</div>
-                                <div class="answer" style="color: #50595e; line-height: 1.7; padding-left: 20px; border-left: 2px solid #ddd;">${item.answer || item.a}</div>
+                            <div class="qa-item">
+                                <div class="question">Q: ${item.question || item.q}</div>
+                                <div class="answer">A: ${item.answer || item.a}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -128,29 +115,54 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // 4. Final Assembly
-        keyPointsDisplay.innerHTML = `
-            <div class="content-header" style="margin-bottom: 30px;">
-                <h2 style="font-size: 1.8em; color: #1a1a1a; line-height: 1.3; margin-bottom: 15px;">${program.title}</h2>
-                <div class="meta-info" style="color: #888; font-size: 0.9em;">ID: ${program.id.split('/').pop()}</div>
-            </div>
+        // 2. Chapters Section
+        let chaptersHTML = '';
+        if (Array.isArray(program.chapters)) {
+            chaptersHTML = `
+                <div class="key-point-section">
+                    <h3>章节导览</h3>
+                    <div class="chapters-timeline">
+                        ${program.chapters.map(c => `
+                            <div class="chapter-row" style="margin-bottom: 10px; display: flex; align-items: baseline;">
+                                <span class="timestamp" style="color: #007bff; font-weight: bold; min-width: 70px;">${c.timestamp}</span>
+                                <span class="chapter-title" style="margin-left: 10px;">${c.title}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
+        // 3. Highlights Section
+        let highlightsHTML = '';
+        if (Array.isArray(program.highlights)) {
+            highlightsHTML = `
+                <div class="key-point-section">
+                    <h3>精彩高亮</h3>
+                    ${program.highlights.map(h => `
+                        <div class="highlight-card" style="border-left: 4px solid #dc3545; background: #fff5f5; padding: 15px; margin-bottom: 15px; border-radius: 0 8px 8px 0;">
+                            <small style="color: #888;">时间: ${h.timestamp}</small>
+                            <p style="margin: 5px 0; font-style: italic; color: #333;">"${h.text}"</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        keyPointsDisplay.innerHTML = `
+            <header style="margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">${program.title}</h2>
+                <div style="color: #6c757d; font-size: 0.9rem;">Episode ID: ${program.id.split('/').pop()}</div>
+            </header>
+            
             <div class="key-point-section">
-                <h3>本期摘要</h3>
-                <p style="font-size: 1.1em; line-height: 1.8; color: #333;">${formatText(program.summary)}</p>
+                <h3>内容摘要</h3>
+                <p style="font-size: 1.1rem; color: #444;">${formatText(program.summary)}</p>
             </div>
 
             ${qaHTML}
-
-            <div class="key-point-section">
-                <h3>章节导览</h3>
-                ${chaptersHTML}
-            </div>
-
-            <div class="key-point-section">
-                <h3>精彩高亮</h3>
-                <div class="highlights-grid">${highlightsHTML}</div>
-            </div>
+            ${chaptersHTML}
+            ${highlightsHTML}
         `;
     }
 });

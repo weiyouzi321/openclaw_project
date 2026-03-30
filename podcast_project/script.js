@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeChannelId = null;
     let activeProgramId = null;
 
-    console.log("Script loaded, fetching data_v2.json...");
+    console.log("Script loaded, fetching data_v2.json with cache-buster...");
 
-    fetch('data_v2.json')
+    fetch(`data_v2.json?v=${new Date().getTime()}`)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();

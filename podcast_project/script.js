@@ -6,16 +6,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeMessage = document.querySelector('.welcome-message');
 
     let allData = [];
+    let activeChannelId = null;
     let activeProgramId = null;
 
+    // Load data from unified source
     fetch('data_v2.json')
         .then(response => response.json())
         .then(data => {
-            // New structure: data_v2.json is a direct array of program objects
             allData = data;
-            renderPrograms(allData);
+            renderChannels();
         })
         .catch(error => console.error("Error fetching data:", error));
+
+    function renderChannels() {
+        channelList.innerHTML = '';
+        allData.forEach(channel => {
+            const li = document.createElement('li');
+            li.textContent = channel.channelName;
+            // Enhanced active state logic
+            li.className = activeChannelId === channel.channelId ? 'active' : '';
+            li.onclick = () => selectChannel(channel.channelId, li);
+            channelList.appendChild(li);
+        });
+    }
+
+    function selectChannel(channelId, element) {
+        activeChannelId = channelId;
+        activeProgramId = null; // Reset program when channel changes
+        
+        document.querySelectorAll('#channel-list li').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+
+        const channel = allData.find(c => c.channelId === channelId);
+        renderPrograms(channel.programs);
+        
+        // UI reset for new channel
+        document.getElementById('program-column').style.display = 'flex';
+        keyPointsDisplay.style.display = 'none';
+        welcomeMessage.style.display = 'block';
+    }
 
     function renderPrograms(programs) {
         programList.innerHTML = '';
@@ -25,8 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
             li.onclick = () => selectProgram(program.id, li);
             programList.appendChild(li);
         });
-        // Auto-show program column as we no longer have channel selection
-        document.getElementById('program-column').style.display = 'flex';
     }
 
     function selectProgram(programId, element) {
@@ -34,8 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#program-list li').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
 
-        const program = allData.find(p => p.id === programId);
-        renderDetails(program);
+        // Find program across all channels
+        let program = null;
+        for (const channel of allData) {
+            program = channel.programs.find(p => p.id === programId);
+            if (program) break;
+        }
+
+        if (program) renderDetails(program);
     }
 
     function renderDetails(program) {
@@ -47,43 +80,47 @@ document.addEventListener('DOMContentLoaded', () => {
             return text.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
         };
 
-        // Handle Array structures for Chapters
+        // 1. Chapters Section (Supporting Array or Raw String)
         let chaptersHTML = '';
         if (Array.isArray(program.chapters)) {
-            chaptersHTML = program.chapters.map(c => `
-                <div class="chapter-item" style="margin-bottom: 10px;">
-                    <span class="timestamp" style="color: #377EB8; font-weight: bold; cursor: pointer;">[${c.timestamp}]</span>
-                    <span class="chapter-title" style="margin-left: 10px; font-weight: 500;">${c.title}</span>
+            chaptersHTML = `
+                <div class="chapters-timeline">
+                    ${program.chapters.map(c => `
+                        <div class="chapter-item" style="margin-bottom: 12px; display: flex; align-items: baseline;">
+                            <span class="timestamp" style="background: #eef4ff; color: #377EB8; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; font-size: 0.9em; cursor: pointer;">${c.timestamp}</span>
+                            <span class="chapter-title" style="margin-left: 15px; color: #333; font-weight: 500;">${c.title}</span>
+                        </div>
+                    `).join('')}
                 </div>
-            `).join('');
+            `;
         } else {
-            chaptersHTML = formatText(program.chapters);
+            chaptersHTML = `<p>${formatText(program.chapters)}</p>`;
         }
 
-        // Handle Array structures for Highlights
+        // 2. Highlights Section
         let highlightsHTML = '';
         if (Array.isArray(program.highlights)) {
             highlightsHTML = program.highlights.map(h => `
-                <div class="highlight-item" style="margin-bottom: 15px; border-left: 3px solid #E41A1C; padding-left: 10px; font-style: italic;">
-                    <span class="timestamp" style="color: #666; font-size: 0.9em;">[${h.timestamp}]</span>
-                    <p style="margin: 5px 0;">"${h.text}"</p>
+                <div class="highlight-item" style="margin-bottom: 15px; border-left: 4px solid #E41A1C; padding: 5px 15px; background: #fffdfd; border-radius: 0 8px 8px 0;">
+                    <div style="font-size: 0.85em; color: #888; margin-bottom: 4px;">Time: ${h.timestamp}</div>
+                    <p style="margin: 0; color: #444; line-height: 1.5; font-style: italic;">"${h.text}"</p>
                 </div>
             `).join('');
         } else {
-            highlightsHTML = formatText(program.highlights);
+            highlightsHTML = `<p>${formatText(program.highlights)}</p>`;
         }
 
-        // Handle Q&A (supporting both .q/.a and .question/.answer keys)
+        // 3. Q&A Section
         let qaHTML = '';
         if (Array.isArray(program.qa)) {
             qaHTML = `
                 <div class="key-point-section">
-                    <h3>深度问答 (Q&A)</h3>
+                    <h3>深度解读 (Q&A)</h3>
                     <div class="qa-list">
                         ${program.qa.map(item => `
-                            <div class="qa-item" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                                <div class="question" style="font-weight: bold; color: #333;">Q: ${item.question || item.q}</div>
-                                <div class="answer" style="margin-top: 8px; color: #555;">A: ${item.answer || item.a}</div>
+                            <div class="qa-card" style="background: #f8f9fa; border: 1px solid #edf0f2; padding: 18px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <div class="question" style="font-weight: bold; color: #2c3e50; font-size: 1.05em; margin-bottom: 10px;">Q: ${item.question || item.q}</div>
+                                <div class="answer" style="color: #50595e; line-height: 1.7; padding-left: 20px; border-left: 2px solid #ddd;">${item.answer || item.a}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -91,20 +128,28 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // 4. Final Assembly
         keyPointsDisplay.innerHTML = `
-            <h2 style="color: #333; border-bottom: 2px solid #377EB8; padding-bottom: 10px;">${program.title}</h2>
-            <div class="key-point-section">
-                <h3>内容摘要</h3>
-                <p style="line-height: 1.6;">${formatText(program.summary)}</p>
+            <div class="content-header" style="margin-bottom: 30px;">
+                <h2 style="font-size: 1.8em; color: #1a1a1a; line-height: 1.3; margin-bottom: 15px;">${program.title}</h2>
+                <div class="meta-info" style="color: #888; font-size: 0.9em;">ID: ${program.id.split('/').pop()}</div>
             </div>
+
+            <div class="key-point-section">
+                <h3>本期摘要</h3>
+                <p style="font-size: 1.1em; line-height: 1.8; color: #333;">${formatText(program.summary)}</p>
+            </div>
+
             ${qaHTML}
+
             <div class="key-point-section">
-                <h3>分章节精要</h3>
-                <div class="chapters-container">${chaptersHTML}</div>
+                <h3>章节导览</h3>
+                ${chaptersHTML}
             </div>
+
             <div class="key-point-section">
                 <h3>精彩高亮</h3>
-                <div class="highlights-container">${highlightsHTML}</div>
+                <div class="highlights-grid">${highlightsHTML}</div>
             </div>
         `;
     }
